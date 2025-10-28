@@ -62,10 +62,18 @@ python app.py
    # Todo_app.ico file is available in this repository.
    pyinstaller --onefile --windowed --icon=Todo_app.ico --name "Secure ToDo App" app.py --add-data "Todo_app.ico;."
    ```
-   If you get an error that "pyinstaller is not recognized as an internal or external command", run `python -m pip show pyinstaller` command to find the location. Navigate to that location and run above command. 
 3. Find your `.exe` in the `dist/` folder!
 
 ***
+### Troubleshooting
+* If you do not see icon for the exe file, clear your windows explorer cache and reopen the folder. Run below commands on command prompt:
+   ```bash
+   taskkill /IM explorer.exe /F
+   del "%LocalAppData%\IconCache.db" /A
+   del "%LocalAppData%\Microsoft\Windows\Explorer\iconcache*" /A
+   start explorer.exe
+   ```
+* If you get an error that "*pyinstaller is not recognized as an internal or external command*", run `python -m pip show pyinstaller` command to find the location. Navigate to that location and run above command. 
 
 ## 💡 Usage
 
