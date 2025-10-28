@@ -63,7 +63,7 @@ class TaskDialog(QDialog):
         
         layout.addWidget(QLabel("Status:"))
         self.status_input = QComboBox()
-        self.status_input.addItems(['In Progress', 'Hold', 'Completed'])
+        self.status_input.addItems(['Not Started','In Progress', 'Hold', 'Completed'])
         self.status_input.currentTextChanged.connect(self.on_status_changed)
         if self.task:
             self.status_input.setCurrentText(self.task.get('status', 'In Progress'))
@@ -572,7 +572,7 @@ class TodoApp(QMainWindow):
         self.active_table.setItem(row, 3, QTableWidgetItem(task.get('notes', '')))
         
         status_item = QTableWidgetItem(task['status'])
-        status_color_map = {'In Progress': QColor(33, 150, 243), 'Hold': QColor(255, 152, 0), 
+        status_color_map = {'Not Started': QColor(185, 164, 239),'In Progress': QColor(33, 150, 243), 'Hold': QColor(255, 152, 0), 
                            'Completed': QColor(76, 175, 80)}
         if task.get('status') in status_color_map:
             status_item.setBackground(status_color_map.get(task['status']))
