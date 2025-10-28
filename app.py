@@ -645,7 +645,19 @@ class TodoApp(QMainWindow):
             sys.exit()
 
 def main():
+    import sys, os
+    from PyQt5.QtGui import QIcon
+    from PyQt5.QtWidgets import QApplication
+
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    icon_path = os.path.join(base_path, "Todo_app.ico")
+
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(icon_path))
     window = TodoApp()
     window.show()
     sys.exit(app.exec_())
