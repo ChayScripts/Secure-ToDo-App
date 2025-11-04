@@ -25,6 +25,7 @@ Fast, beautiful, and designed for busy professionals who care about security and
 - **🔑 Change Password:** Update your password and re-encrypt your data at any time.
 - **📦 Single-file EXE:** Packaged for easy portable use on any Windows machine.
 - **🛡️ No Data Sync or Cloud:** Your tasks and details never leave your device.
+- **🕒 Idle Timeout:** Lock the application after 10 minutes of inactivity to protect sensitive data and enhance confidentiality. Unlock to resume your session securely.
 
 ***
 
