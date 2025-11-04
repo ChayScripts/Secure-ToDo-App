@@ -9,9 +9,10 @@ from PyQt5.QtWidgets import (
     QLineEdit, QTextEdit, QComboBox, QDateEdit, QSpinBox, QMessageBox,
     QTabWidget, QHeaderView, QInputDialog, QCheckBox, QProgressBar
 )
-from PyQt5.QtCore import Qt, QDate, QTimer, QItemSelectionModel
+from PyQt5.QtCore import Qt, QDate, QTimer, QItemSelectionModel, QEvent
 from PyQt5.QtGui import QColor, QFont
 import base64
+import time
 
 class EncryptionHandler:
     @staticmethod
@@ -235,6 +236,13 @@ class TodoApp(QMainWindow):
         self.config_file = self.config_dir / "config.json"
         self.init_ui()
         self.authenticate()
+        self.last_activity = time.time()
+        self.idle_timer = QTimer()
+        self.idle_timer.timeout.connect(self.check_idle)
+        self.idle_timer.start(1000)
+        self.installEventFilter(self)
+        for w in self.findChildren(QWidget):
+            w.installEventFilter(self)
         self.autosave_timer = QTimer()
         self.autosave_timer.timeout.connect(self.autosave)
         self.autosave_timer.start(30000)
@@ -311,6 +319,49 @@ class TodoApp(QMainWindow):
         self.tabs.addTab(self.archived_table, "Archived (0)")
         layout.addWidget(self.tabs)
         central_widget.setLayout(layout)
+        self.lock_overlay = QWidget(self)
+        self.lock_overlay.setStyleSheet("background-color: white;")
+        self.lock_overlay.setGeometry(self.rect())
+        self.lock_overlay.hide()
+    
+    def eventFilter(self, obj, event):
+        if event.type() in (QEvent.MouseMove, QEvent.MouseButtonPress, QEvent.KeyPress, QEvent.Wheel):
+            self.last_activity = time.time()
+        return False
+
+    def check_idle(self):
+        if time.time() - self.last_activity >= 600:
+            self.trigger_lock()
+
+    def trigger_lock(self):
+
+        self.lock_overlay.show()
+        dlg = PasswordLoginDialog(self)
+        dlg.installEventFilter(self)
+        for w in dlg.findChildren(QWidget):
+            w.installEventFilter(self)
+
+        dlg.installEventFilter(self)
+
+        for w in dlg.findChildren(QWidget):
+
+            w.installEventFilter(self)
+        while True:
+            if dlg.exec_() != QDialog.Accepted:
+                continue
+            pwd = dlg.get_password()
+            if pwd == self.current_password:
+                break
+            dlg.show_invalid()
+            dlg.password_input.clear()
+        self.lock_overlay.hide()
+        self.last_activity = time.time()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, 'lock_overlay'):
+            self.lock_overlay.setGeometry(self.rect())
+
     def on_active_header_clicked(self, idx):
         if idx == 2:
             order = ['High', 'Medium', 'Low', 'Unassigned']
@@ -344,6 +395,15 @@ class TodoApp(QMainWindow):
     def authenticate(self):
         if self.config_file.exists():
             dialog = PasswordLoginDialog(self)
+            dialog.installEventFilter(self)
+            for w in dialog.findChildren(QWidget):
+                w.installEventFilter(self)
+
+            dialog.installEventFilter(self)
+
+            for w in dialog.findChildren(QWidget):
+
+                w.installEventFilter(self)
             while True:
                 if dialog.exec_() != QDialog.Accepted:
                     sys.exit()
@@ -357,6 +417,15 @@ class TodoApp(QMainWindow):
                 continue
         else:
             dialog = PasswordSetupDialog(self)
+            dialog.installEventFilter(self)
+            for w in dialog.findChildren(QWidget):
+                w.installEventFilter(self)
+
+            dialog.installEventFilter(self)
+
+            for w in dialog.findChildren(QWidget):
+
+                w.installEventFilter(self)
             if dialog.exec_() != QDialog.Accepted:
                 sys.exit()
             self.current_password = dialog.get_password()
@@ -400,6 +469,15 @@ class TodoApp(QMainWindow):
             QMessageBox.warning(self, "Error", "Failed to save.")
     def add_task(self):
         dialog = TaskDialog(self)
+        dialog.installEventFilter(self)
+        for w in dialog.findChildren(QWidget):
+            w.installEventFilter(self)
+
+        dialog.installEventFilter(self)
+
+        for w in dialog.findChildren(QWidget):
+
+            w.installEventFilter(self)
         if dialog.exec_() == QDialog.Accepted:
             task_data = dialog.get_task_data()
             if task_data['percent'] == 100:
@@ -438,6 +516,9 @@ class TodoApp(QMainWindow):
             return
         oldstatus = self.tasks[index].get('status')
         dialog = TaskDialog(self, self.tasks[index])
+        dialog.installEventFilter(self)
+        for w in dialog.findChildren(QWidget):
+            w.installEventFilter(self)
         if dialog.exec_() == QDialog.Accepted:
             updated = dialog.get_task_data()
             movetocompleted = updated['status'] == 'Completed' or updated['percent'] == 100
@@ -581,7 +662,7 @@ class TodoApp(QMainWindow):
         ddisp = f"{task.get('duration')}d" if task.get('duration') else ''
         self.active_table.setItem(row, 6, QTableWidgetItem(ddisp))
         self.active_table.setItem(row, 7, QTableWidgetItem(task.get('endDate','')))
-        # PROGRESS BAR for % COMPLETE column
+
         percent_bar = QProgressBar()
         percent_bar.setMinimum(0)
         percent_bar.setMaximum(100)
@@ -625,7 +706,7 @@ class TodoApp(QMainWindow):
         self.completed_table.setItem(row, 2, priority_item)
         self.completed_table.setItem(row, 3, QTableWidgetItem(task.get('notes','')))
         self.completed_table.setItem(row, 4, QTableWidgetItem(task.get('startDate','')))
-        # Only show completion date here (not progress bar)
+
         self.completed_table.setItem(row, 5, QTableWidgetItem(task.get('completedDate','')))
     def add_to_archived_table(self, idx, task):
         row = self.archived_table.rowCount()
@@ -655,7 +736,7 @@ class TodoApp(QMainWindow):
         ddisp = f"{task.get('duration')}d" if task.get('duration') else ''
         self.archived_table.setItem(row, 6, QTableWidgetItem(ddisp))
         self.archived_table.setItem(row, 7, QTableWidgetItem(task.get('endDate','')))
-        # PROGRESS BAR for % COMPLETE column
+
         percent_bar = QProgressBar()
         percent_bar.setMinimum(0)
         percent_bar.setMaximum(100)
@@ -690,9 +771,8 @@ class TodoApp(QMainWindow):
                 else:
                     QMessageBox.warning(self, "Error", "Passwords don't match!")
     def lock_app(self):
-        if QMessageBox.question(self, "Lock", "Lock And Exit the app?", QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes:
-            self.save_to_storage()
-            sys.exit()
+        self.save_to_storage()
+        self.trigger_lock()
 
 def main():
     import sys, os
